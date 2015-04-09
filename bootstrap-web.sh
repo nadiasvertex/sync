@@ -17,8 +17,8 @@ ${PYPY} get-pip.py
 ${PYPY} -m pip install uwsgi
 ${PYPY} -m pip install kazoo
 
-mkdir -p ${APP}
-find /vagrant/ -name "*.py" | xargs -iTARG ln -s TARG ${APP}/
+rm -rf ${APP}
+ln -s /vagrant/app ${APP}
 
 cat > rc.local <<rc_local_data
 #!/bin/bash

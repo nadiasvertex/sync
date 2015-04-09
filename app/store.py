@@ -14,41 +14,52 @@ class Store:
     def __init__(self):
         self.data = {}
 
-    def get(self, key):
+    def _get_key(self, uid, ns, key):
+        return "%s:%s:%s" % (uid, ns, key)
+
+    def get(self, uid, ns, key):
         """
         Get the value associated with the key.
+        :param uid: The user id to use.
+        :param ns: The namespace to use.
         :param key: The key to look up.
         :return: A tuple of (version, value) stored.
         """
-        return self.data.get(key, (None, None, None))[1:]
+        return self.data.get(self._get_key(uid, ns, key), (None, None, None))[1:]
 
-    def put(self, key, value):
+    def put(self, uid, ns, key, value):
         """
         Updates the current value associated with this key. Also stores when the value
         was last written, and a serial number indicating what the current version of the
         value is.
 
+        :param uid: The user id to use.
+        :param ns: The namespace to use.
         :param key: The key to store.
         :param value: The value to store.
         :return: The previous value.
         """
-        current_value = self.data.get(key, (None, -1, None))
-        self.data[key] = (datetime.now(), current_value[1] + 1, value)
+        raw_key = self._get_key(uid, ns, key)
+        current_value = self.data.get(raw_key, (None, -1, None))
+        self.data[raw_key] = (datetime.now(), current_value[1] + 1, value)
         return current_value[2]
 
-    def put_atomic(self, expected_version, key, value):
+    def put_atomic(self, uid, ns, expected_version, key, value):
         """
         If the version of the value in the system is what we expect, then update the key with
         the value given. Otherwise return a tuple of (False, cur_serial, cur_value).
 
+        :param uid: The user id to use.
+        :param ns: The namespace to use.
         :param expected_version: The version of the record we expect.
         :param key: The key to update.
         :param value: The value to associate with the key.
         :return: A tuple of (True, new_version, new_value) if it works
         """
-        current_value = self.data.get(key, (None, -1, None))
+        raw_key = self._get_key(uid, ns, key)
+        current_value = self.data.get(raw_key, (None, -1, None))
         if current_value[1] != expected_version:
             return False, current_value[1], current_value[2]
 
-        self.data[key] = (datetime.now(), current_value[1]+1, value)
+        self.data[raw_key] = (datetime.now(), current_value[1]+1, value)
         return True, current_value[1] + 1, value

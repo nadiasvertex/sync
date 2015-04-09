@@ -1,6 +1,8 @@
 """
 Manages bookmarks. Provides synchronization between versions.
 """
+import json
+
 __author__ = 'Christopher Nelson'
 
 class Bookmarks:
@@ -45,14 +47,26 @@ class Bookmarks:
                 dest[slot] = b2[slot]
 
     def get(self, user_id, publication):
-        key = "%s:bookmark:%s" % (user_id, publication)
-        return self.store.get(key)[1]
+        r = self.store.get(user_id, "bookmark", publication)
+        if r[1] is None:
+            return None
+
+        return json.loads(r[1])
 
     def update(self, user_id, publication, bookmarks):
-        key = "%s:bookmark:%s" % (user_id, publication)
-        version, value = self.store.get(key)
+        worked = False
+        version, value = self.store.get(user_id, "bookmark", publication)
+
         while True:
-            worked, version, value = self.store.put_atomic(version, key, self.merge(bookmarks, value))
+            stored_bookmarks = json.loads(value)
             if worked:
-                return
+                return stored_bookmarks
+
+            worked, version, value = self.store.put_atomic(
+                user_id,
+                "bookmark",
+                version,
+                publication,
+                json.dumps(self.merge(bookmarks, stored_bookmarks))
+            )
 
