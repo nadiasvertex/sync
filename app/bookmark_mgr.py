@@ -32,6 +32,11 @@ class Bookmarks:
         if b1 == b2:
             return b1
 
+        if b1 is None:
+            return b2
+        if b2 is None:
+            return b1
+
         dest = {}
         for slot in range(0, 9):
             slot = str(slot)
