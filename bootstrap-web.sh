@@ -17,8 +17,15 @@ ${PYPY} get-pip.py
 ${PYPY} -m pip install uwsgi
 ${PYPY} -m pip install kazoo
 
-rm -rf ${APP}
-ln -s /vagrant/app ${APP}
+if [ -d "${APP}" ]; then
+    if [ ! -L "${APP}" ]; then
+        rm -rf ${APP}
+    fi
+fi
+
+if [ ! -d "${APP}" ]; then
+    ln -s /vagrant/app ${APP}
+fi
 
 cat > rc.local <<rc_local_data
 #!/bin/bash

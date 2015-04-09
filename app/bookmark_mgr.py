@@ -5,6 +5,7 @@ import json
 
 __author__ = 'Christopher Nelson'
 
+
 class Bookmarks:
     def __init__(self, store):
         self.store = store
@@ -27,8 +28,13 @@ class Bookmarks:
         :param b2: Bookmark payload two to merge.
         :return: The merged bookmarks.
         """
+        print("b1=%s, b2=%s" % (b1, b2))
+        if b1 == b2:
+            return b1
+
         dest = {}
         for slot in range(0, 9):
+            slot = str(slot)
             if slot in b1 and slot in b2:
                 b1_slot = b1[slot]
                 b2_slot = b2[slot]
@@ -46,6 +52,8 @@ class Bookmarks:
             elif slot in b2 and b2[slot]["value"] is not None:
                 dest[slot] = b2[slot]
 
+        return dest
+
     def get(self, user_id, publication):
         r = self.store.get(user_id, "bookmark", publication)
         if r[1] is None:
@@ -58,15 +66,23 @@ class Bookmarks:
         version, value = self.store.get(user_id, "bookmark", publication)
 
         while True:
-            stored_bookmarks = json.loads(value)
+            print("existing value: '%s'" % str(value))
+
+            stored_bookmarks = json.loads(value) if value else None
             if worked:
                 return stored_bookmarks
 
-            worked, version, value = self.store.put_atomic(
+            print("existing decoded value: '%s'" % str(stored_bookmarks))
+
+            merged = json.dumps(self.merge(bookmarks, stored_bookmarks))
+
+            print("merged value: '%s'" % merged)
+
+            worked, version, value = self.store.put(
                 user_id,
                 "bookmark",
                 version,
                 publication,
-                json.dumps(self.merge(bookmarks, stored_bookmarks))
+                merged
             )
 
