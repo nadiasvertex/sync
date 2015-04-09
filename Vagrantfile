@@ -29,19 +29,19 @@ Vagrant.configure(2) do |config|
     config.vm.provision :shell, path: "bootstrap-db3.sh"
   end
    
-  config.vm.define "web1" do |db1|
+  config.vm.define "web1" do |web1|
     config.vm.box = "ubuntu/trusty64"
     config.vm.network "private_network", ip: "192.168.33.20"
     config.vm.provision :shell, path: "bootstrap-web.sh"
   end
    
-  config.vm.define "web2" do |db1|
+  config.vm.define "web2" do |web2|
     config.vm.box = "ubuntu/trusty64"
     config.vm.network "private_network", ip: "192.168.33.21"
     config.vm.provision :shell, path: "bootstrap-web.sh"
   end
    
-  config.vm.define "web3" do |db1|
+  config.vm.define "web3" do |web3|
     config.vm.box = "ubuntu/trusty64"
     config.vm.network "private_network", ip: "192.168.33.22"
     config.vm.provision :shell, path: "bootstrap-web.sh"
@@ -50,6 +50,7 @@ Vagrant.configure(2) do |config|
   config.vm.define "lb", primary: true do |lb|
     config.vm.box = "ubuntu/trusty64"
     config.vm.network "forwarded_port", guest: 80, host: 8080
+    config.vm.provision :shell, path: "bootstrap-lb.sh"
   end
 
   # Create a public network, which generally matched to bridged network.
