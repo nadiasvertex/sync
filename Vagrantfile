@@ -43,7 +43,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.define "lb", primary: true do |lb|
     lb.vm.network "private_network", ip: "192.168.33.5"
-    lb.vm.network "forwarded_port", guest: 80, host: 80
+    lb.vm.network "forwarded_port", guest: 80, host: 8080
     lb.vm.provision :shell, path: "bootstrap-lb.sh"
   end
 

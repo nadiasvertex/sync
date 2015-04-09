@@ -1,4 +1,4 @@
 #!/bin/bash
 . /vagrant/bootstrap-db.sh
-echo "3" > ${HOME}/zookeeper-data/myid
-${ZK}/bin/zkServer.sh start
+echo "3" > ${ZK_DATA}/myid
+sudo ${ZK}/bin/zkServer.sh start
