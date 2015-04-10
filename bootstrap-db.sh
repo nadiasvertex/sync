@@ -18,3 +18,7 @@ sudo cp -f rc.local /etc/rc.local
 
 sudo cp /vagrant/ntp-slave.conf /etc/ntp.conf
 sudo service ntp restart
+
+sudo cp /vagrant/sysctl.conf /etc/
+sudo cp /vagrant/limits.conf /etc/security/
+
