@@ -5,17 +5,15 @@ APP=/home/vagrant/app
 sudo apt-get update
 sudo apt-get install -y ntp
 
-# Get pypy
-wget -c -nv https://bitbucket.org/pypy/pypy/downloads/pypy-2.5.1-linux64.tar.bz2
-tar -xf pypy-2.5.1-linux64.tar.bz2
+# Install pypy
+tar -xf /vagrant/pypy-2.5.1-linux64.tar.bz2
 
-# Get pip
-wget -c -nv https://bootstrap.pypa.io/get-pip.py
-${PYPY} get-pip.py
+# Install pip
+${PYPY} /vagrant/get-pip.py
 
 # Install/build python modules
 ${PYPY} -m pip install uwsgi
-${PYPY} -m pip install kazoo
+${PYPY} -m pip install couchbase
 
 if [ -d "${APP}" ]; then
     if [ ! -L "${APP}" ]; then
