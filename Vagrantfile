@@ -12,16 +12,19 @@ Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
 
   config.vm.define "db1" do |db1|
+    db1.vm.box = "ubuntu/precise64"
     db1.vm.network "private_network", ip: "192.168.33.10"
     db1.vm.provision :shell, path: "bootstrap-db1.sh"
   end
 
   config.vm.define "db2" do |db2|
+    db2.vm.box = "ubuntu/precise64"
     db2.vm.network "private_network", ip: "192.168.33.11"
     db2.vm.provision :shell, path: "bootstrap-db2.sh"
   end
 
   config.vm.define "db3" do |db3|
+    db3.vm.box = "ubuntu/precise64"
     db3.vm.network "private_network", ip: "192.168.33.12"
     db3.vm.provision :shell, path: "bootstrap-db3.sh"
   end
