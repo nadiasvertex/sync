@@ -2,14 +2,14 @@ import json
 import traceback
 
 import uwsgi
-import store_zk
+import store_cb
 import bookmark_mgr
 
 
 _ = uwsgi
 
-# ZooKeeper hosts
-zk_hosts = [
+# Couchbase hosts
+cb_hosts = [
     "192.168.33.10",
     "192.168.33.11",
     "192.168.33.12"
@@ -17,7 +17,7 @@ zk_hosts = [
 
 
 def bookmark_handler(env, elements):
-    st = store_zk.Store(zk_hosts)
+    st = store_cb.Store(cb_hosts)
     bookmarks = bookmark_mgr.Bookmarks(st)
 
     print("processing bookmark request: %s" % str(elements))

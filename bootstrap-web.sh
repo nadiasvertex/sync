@@ -1,19 +1,20 @@
 #!/bin/bash
-PYPY=/home/vagrant/pypy-2.5.1-linux64/bin/pypy
-UWSGI=/home/vagrant/pypy-2.5.1-linux64/bin/uwsgi
+PY=/usr/bin/python2
+UWSGI=/usr/local/bin/uwsgi
 APP=/home/vagrant/app
-sudo apt-get update
-sudo apt-get install -y ntp
 
-# Install pypy
-tar -xf /vagrant/pypy-2.5.1-linux64.tar.bz2
+sudo apt-key add /vagrant/couchbase.key
+sudo cp -f /vagrant/couchbase.list /etc/apt/sources.list.d/
+
+sudo apt-get update
+sudo apt-get install -y ntp libcouchbase2-core libcouchbase-dev python-dev
 
 # Install pip
-${PYPY} /vagrant/get-pip.py
+sudo ${PY} /vagrant/get-pip.py
 
 # Install/build python modules
-${PYPY} -m pip install uwsgi
-${PYPY} -m pip install couchbase
+sudo ${PY} -m pip install uwsgi
+sudo ${PY} -m pip install couchbase
 
 if [ -d "${APP}" ]; then
     if [ ! -L "${APP}" ]; then
@@ -27,12 +28,10 @@ fi
 
 cat > rc.local <<rc_local_data
 #!/bin/bash
-cd ${APP} && ${UWSGI} --http :80 --pypy-wsgi app --master --processes 2 --stats :9191 --daemonize /var/log/app.log
+cd ${APP} && ${UWSGI} --http :80 --wsgi-file app.py --master --processes 2 --stats :9191 --daemonize /var/log/app.log
 rc_local_data
 chmod +x rc.local
 sudo cp rc.local /etc/rc.local
-
-sudo bash rc.local
 
 sudo cp /vagrant/ntp-slave.conf /etc/ntp.conf
 sudo service ntp restart

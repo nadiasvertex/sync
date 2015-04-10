@@ -1,29 +1,29 @@
 """
-Provides a key-value store interface for zookeeper.
+Provides a key-value store interface for couchbase.
 """
 
-from kazoo.client import KazooClient
-from kazoo.exceptions import NoNodeError, BadVersionError
+from couchbase.bucket import Bucket
+from couchbase.exceptions import NotFoundError, KeyExistsError
 
 __author__ = 'Christopher Nelson'
 
 
 class Store:
     """
-    Uses zoo keeper as a key vaue store. This store is as thread safe as the underlying client.
+    Uses couchbase as a key value store. This store is as thread safe as the underlying client.
     """
 
     def __init__(self, host_list):
         hosts = ",".join(host_list)
-        print("zk, connecting to: '%s'" % hosts)
-        self.zk = KazooClient(hosts)
+        uri = "couchbase://%s/sync-app" % hosts
+        print("cb, connecting to: '%s'" % uri)
+        self.cb = Bucket(uri, password=None)
 
     def __enter__(self):
-        self.zk.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.zk.stop()
+        pass
 
     def get(self, uid, ns, key):
         """
@@ -33,14 +33,14 @@ class Store:
         :param key: The key to look up.
         :return: A tuple of (version, value) stored.
         """
-        path = "/jwl/sync/%s/%s/%s" % (uid, ns, key)
-        print("zk, fetching: '%s'" % path)
+        path = "%s/%s/%s" % (uid, ns, key)
+        print("cb, fetching: '%s'" % path)
         try:
-            r = self.zk.get(path)
-            print("zk, value at: '%s'='%s'" % (path, r))
-            return r[1].version, r[0]
-        except NoNodeError:
-            print("zk, no value at: '%s'" % path)
+            r = self.cb.get(path)
+            print("cb, value at: '%s'='%s'" % (path, r))
+            return r.cas, r.value
+        except NotFoundError:
+            print("cb, no value at: '%s'" % path)
             return None, None
 
 
@@ -56,19 +56,18 @@ class Store:
         :param value: The value to associate with the key.
         :return: A tuple of (True, new_version, new_value) if it works, (False, cur_version, cur_value) on failure.
         """
-        path = "/jwl/sync/%s/%s/%s" % (uid, ns, key)
-        self.zk.ensure_path(path)
+        path = "%s/%s/%s" % (uid, ns, key)
 
         if expected_version is None:
-            self.zk.set(path, value)
-            return True, 1, value
+            r = self.cb.upsert(path, value)
+            return True, r.cas, value
 
         try:
-            print("zk, set '%s'='%s'" % (path, value))
-            self.zk.set(path, value, version=expected_version)
-            return True, expected_version + 1, value
-        except BadVersionError:
-            print("zk, set failed '%s'='%s'" % (path, value))
-            r = self.zk.get(path)
-            return False, r[1].version, r[0]
+            print("cb, set '%s'='%s'" % (path, value))
+            r = self.cb.upsert(path, value, cas=expected_version)
+            return True, r.cas, value
+        except KeyExistsError:
+            print("cb, set failed '%s'='%s'" % (path, value))
+            r = self.cb.get(path)
+            return False, r.cas, r.value
 
