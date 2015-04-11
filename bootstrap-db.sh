@@ -4,8 +4,7 @@ ZK_DATA=/home/vagrant/zookeeper-data
 sudo apt-get update
 sudo apt-get -y install ntp default-jre-headless
 
-wget -c -nv http://mirror.cc.columbia.edu/pub/software/apache/zookeeper/stable/zookeeper-3.4.6.tar.gz
-tar -xf zookeeper-3.4.6.tar.gz #&& rm zookeeper-3.4.6.tar.gz
+tar -xf /vagrant/zookeeper-3.4.6.tar.gz
 mkdir -p ${ZK_DATA}
 cp -f /vagrant/zoo.cfg ${ZK}/conf/
 

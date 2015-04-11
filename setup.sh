@@ -1,7 +1,7 @@
 #!/bin/bash
-wget -c http://packages.couchbase.com/releases/3.0.1/couchbase-server-community_3.0.1-ubuntu12.04_amd64.deb
+wget -c -nv http://mirror.cc.columbia.edu/pub/software/apache/zookeeper/stable/zookeeper-3.4.6.tar.gz
+wget -c https://bitbucket.org/pypy/pypy/downloads/pypy-2.5.1-linux64.tar.bz2
 wget -c https://bootstrap.pypa.io/get-pip.py
-wget -c http://packages.couchbase.com/ubuntu/couchbase.key
 
 # Create the cluster
 vagrant up
