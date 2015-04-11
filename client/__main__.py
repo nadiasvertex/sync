@@ -62,7 +62,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    '--service', default='http://localhost:80/',
+    '--service', default='http://localhost:8080/',
     metavar="URL",
     help='The service address to connect to. Default is %(default)s')
 
