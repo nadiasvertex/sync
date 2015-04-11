@@ -10,4 +10,3 @@ sudo service ntp restart
 
 sudo cp /vagrant/sysctl.conf /etc/
 sudo cp /vagrant/limits.conf /etc/security/
-sudo reboot

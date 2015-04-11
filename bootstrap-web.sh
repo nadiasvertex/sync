@@ -17,22 +17,7 @@ ${PYPY} get-pip.py
 ${PYPY} -m pip install uwsgi
 ${PYPY} -m pip install kazoo
 
-if [ -d "${APP}" ]; then
-    if [ ! -L "${APP}" ]; then
-        rm -rf ${APP}
-    fi
-fi
-
-if [ ! -d "${APP}" ]; then
-    ln -s /vagrant/app ${APP}
-fi
-
-cat > rc.local <<rc_local_data
-#!/bin/bash
-cd ${APP} && ${UWSGI} --http :80 --pypy-wsgi app --master --processes 2 --stats :9191 --daemonize /var/log/app.log
-rc_local_data
-chmod +x rc.local
-sudo cp rc.local /etc/rc.local
+sudo cp /vagrant/web.upstart.config /etc/init/sync.conf
 
 sudo bash rc.local
 
@@ -41,4 +26,3 @@ sudo service ntp restart
 
 sudo cp /vagrant/sysctl.conf /etc/
 sudo cp /vagrant/limits.conf /etc/security/
-sudo reboot
