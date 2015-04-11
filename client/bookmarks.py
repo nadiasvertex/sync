@@ -30,8 +30,12 @@ def sync_bookmarks(url, pub):
     pub_db = db.get(pub)
     p_url = urlparse(url)
     r_url = urlunparse((p_url[0], p_url[1], "/bookmark/1/%s" % pub, None, None, None))
-    db[pub] = requests.put(r_url, json.dumps(pub_db).encode("utf-8")).json()
-    store()
+    r = requests.put(r_url, json.dumps(pub_db).encode("utf-8")).json()
+    if r["error"]:
+        print("Failed to synchronize bookmarks:\n" + r["message"])
+    else:
+        db[pub] = r["value"]
+    store(db)
 
 def get_bookmarks(pub):
     db = load()
