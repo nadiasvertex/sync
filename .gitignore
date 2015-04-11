@@ -2,3 +2,8 @@
 .vagrant
 *.pyc
 __pycache__
+bookmarks.json
+couchbase-server-community_3.0.1-ubuntu12.04_amd64.deb
+get-pip.py
+pypy-2.5.1-linux64.tar.bz2
+
