@@ -19,4 +19,3 @@ ${CB_CLI} bucket-create                      \
        -u admin                              \
        -p letmein
 
-sudo reboot
