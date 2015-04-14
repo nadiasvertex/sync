@@ -47,6 +47,21 @@ def load_bookmarks(pub):
     return None
 
 
+def load_bookmarks_status():
+    ensure_db()
+    con = sqlite3.connect(bookmark_db)
+    con.row_factory = sqlite3.Row
+    try:
+        return [
+            {
+                "version": row["version"],
+                "dirty": row["dirty"],
+                "pub": row["pub"]
+            } for row in con.execute("SELECT pub, version, dirty FROM bookmark")]
+    finally:
+        con.close()
+
+
 def store_bookmarks(pub, data):
     ensure_db()
     con = sqlite3.connect(bookmark_db)
@@ -57,17 +72,6 @@ def store_bookmarks(pub, data):
         )
 
     con.close()
-
-
-def load():
-    ensure_db()
-    with open(bookmark_db) as i:
-        return json.load(i)
-
-
-def store(db):
-    with open(bookmark_db, "w") as o:
-        json.dump(db, o)
 
 
 def sync_bookmarks(url, pub):
@@ -91,9 +95,12 @@ def sync_bookmarks(url, pub):
 
 
 def get_bookmark_status(url, local=True):
-    p_url = urlparse(url)
-    r_url = urlunparse((p_url[0], p_url[1], "/bookmarks/1/", None, None, None))
-    return requests.get(r_url).json()
+    if not local:
+        p_url = urlparse(url)
+        r_url = urlunparse((p_url[0], p_url[1], "/bookmarks/1/", None, None, None))
+        return requests.get(r_url).json()
+    else:
+        return load_bookmarks_status()
 
 
 def get_bookmarks(pub):
@@ -107,7 +114,9 @@ def get_bookmarks(pub):
 def set_bookmark(pub, slot, citation):
     pub_db = load_bookmarks(pub)
     if pub_db is None:
-        pub_db = {"version": -1, "dirty": True, "bookmarks": {}}
+        pub_db = {"version": -1, "dirty": False, "bookmarks": {}}
+        
+    pub_db["dirty"] = True
     slot_entry = pub_db["bookmarks"].setdefault(slot, {})
     slot_entry["when"] = datetime.now().isoformat()
     slot_entry["value"] = "ref://" + citation
