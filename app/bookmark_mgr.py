@@ -10,6 +10,11 @@ class Bookmarks:
     def __init__(self, store):
         self.store = store
 
+
+    def get_status(self, uid):
+        return [{"pub": c[0], "version": c[1]}
+                for c in self.store.get_versioned_children(uid, "bookmark", None)]
+
     def merge(self, b1, b2):
         """
         Perform a bookmark merge. The dataset is a dictionary of bookmarks, the keys are the slots
@@ -75,7 +80,7 @@ class Bookmarks:
 
             stored_bookmarks = json.loads(value) if value else None
             if worked:
-                return stored_bookmarks
+                return {"version": version, "data": stored_bookmarks}
 
             print("existing decoded value: '%s'" % str(stored_bookmarks))
 

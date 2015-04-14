@@ -4,6 +4,7 @@ import traceback
 import uwsgi
 import store_zk
 import bookmark_mgr
+import annotation_mgr
 
 
 _ = uwsgi
@@ -33,8 +34,53 @@ def bookmark_handler(env, elements):
             return bookmarks.update(uid, pub, bookmark_data)
 
 
+def bookmark_collection_handler(env, elements):
+    st = store_zk.Store(zk_hosts)
+    bookmarks = bookmark_mgr.Bookmarks(st)
+
+    print("processing bookmark collection request: %s" % str(elements))
+    uid = elements[0]
+
+    method = env["REQUEST_METHOD"]
+    with st:
+        if method == "GET":
+            return bookmarks.get_status(uid)
+
+
+def annotation_handler(env, elements):
+    st = store_zk.Store(zk_hosts)
+    annotations = annotation_mgr.Annotations(st)
+
+    print("processing annotation request: %s" % str(elements))
+    uid = elements[0]
+    pub = elements[1]
+    citation = elements[2]
+
+    method = env["REQUEST_METHOD"]
+    with st:
+        if method == "GET":
+            return annotations.get(uid, pub, citation)
+        elif method == "PUT":
+            annotation_data = json.loads(env['wsgi.input'].read())
+            if "highlight" in annotation_data:
+                return annotations.add_highlight(
+                    uid, pub, citation,
+                    annotation_data.get("highlight"),
+                    annotation_data.get("note")
+                )
+            elif "note" in annotation_data:
+                return annotations.add_note(
+                    uid, pub, citation,
+                    annotation_data.get("note")
+                )
+            else:
+                raise ValueError("Require 'highlight' or 'note' (or both) for this request.")
+
+
 handlers = {
-    "bookmark": bookmark_handler
+    "bookmark": bookmark_handler,
+    "bookmarks": bookmark_collection_handler,
+    "annotation": annotation_handler
 }
 
 
