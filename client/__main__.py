@@ -1,4 +1,6 @@
 import argparse
+from pprint import pprint
+import sys
 
 import bookmarks
 
@@ -49,6 +51,22 @@ def sync_item(args):
         bookmarks.sync_bookmarks(args.service, args.pub)
 
 
+def sync_all_items(args):
+    if args.item_type == "bookmark":
+        status = bookmarks.get_bookmark_status(args.service)
+        pprint(status, indent=2)
+        if status["error"]:
+            print("Failed to request bookmark status.")
+            sys.exit(1)
+
+        for item in status["value"]:
+            print("%s local=%s remote=%s" % (item["pub"], "?", item["version"]))
+            bookmarks.sync_bookmarks(args.service, item["pub"])
+
+
+
+
+
 parser = argparse.ArgumentParser(
     prog="client",
     epilog="A citation is always preceded with either bible/ or doc/ to "
@@ -82,6 +100,10 @@ add_options(get)
 sync = subparsers.add_parser("sync", description="Synchronize an item.")
 sync.set_defaults(func=sync_item)
 add_options(sync)
+
+sync_all = subparsers.add_parser("sync-all", description="Synchronize all items of the given type.")
+sync_all.set_defaults(func=sync_all_items)
+add_options(sync_all)
 
 args = parser.parse_args()
 args.func(args)
