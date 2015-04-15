@@ -1,4 +1,5 @@
 import json
+from pprint import pprint
 import traceback
 
 import uwsgi
@@ -54,7 +55,7 @@ def annotation_handler(env, elements):
     print("processing annotation request: %s" % str(elements))
     uid = elements[0]
     pub = elements[1]
-    citation = elements[2]
+    citation = "%s/%s" % (elements[2], elements[3])
 
     method = env["REQUEST_METHOD"]
     with st:

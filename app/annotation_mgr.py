@@ -56,7 +56,7 @@ class Annotations:
         d2_n = d2["notes"]
 
         return {
-            "highights": self._merge_dict(d1_h, d2_h, {}),
+            "highlights": self._merge_dict(d1_h, d2_h, {}),
             "notes": self._merge_dict(d1_n, d2_n, {})
         }
 
@@ -84,6 +84,16 @@ class Annotations:
         return o
 
 
+    def _get_key(self, pub, citation):
+        kind, position = citation.split("/")
+        p_vec = position.split(":")
+        if kind == "doc" and len(p_vec) >= 3:
+            p_vec = p_vec[0:2]
+        elif kind == "bible" and len(p_vec) >= 4:
+            p_vec = p_vec[0:3]
+        key = "%s/%s/%s" % (pub, kind, "/".join(p_vec))
+        return key
+
     def get(self, user_id, publication, citation):
         """
         Returns all the annotations for the given citation. The citation can
@@ -98,15 +108,8 @@ class Annotations:
         :param citation: The citation to select.
         :return: The annotation structures.
         """
-        kind, position = citation.split("/")
-        p_vec = position.split(":")
-        if kind == "doc" and len(p_vec) >= 3:
-            p_vec = p_vec[0:2]
-        elif kind == "bible" and len(p_vec) >= 4:
-            p_vec = p_vec[0:3]
-
-        key = "annotation/%s/%s" % (kind, "/".join(p_vec))
-        children, data = self.store.get_children(user_id, publication, key)
+        key = self._get_key(publication, citation)
+        children, data = self.store.get_children(user_id, "annotation", key)
 
         return self._fetch_annotations(user_id, publication, key, {}, children, data)
 
@@ -124,7 +127,8 @@ class Annotations:
         :param note: The note to attach to the highlight. Optional
         :return: (highlight_id, version, citation_annotation_data)
         """
-        version, raw_data = self.store.get(user_id, publication, citation)
+        key = self._get_key(publication, citation)
+        version, raw_data = self.store.get(user_id, "annotation", key)
         when = datetime.now().isoformat()
         while True:
             data = {} if raw_data is None else json.loads(raw_data)
@@ -132,16 +136,16 @@ class Annotations:
 
             if note is not None:
                 notes = data.setdefault("notes", {})
-                note_id = uuid.uuid4()
+                note_id = str(uuid.uuid4())
                 notes[note_id] = {"text": note, "when": when}
             else:
                 note_id = None
 
-            h_id = uuid.uuid4()
+            h_id = str(uuid.uuid4())
             highlights[h_id] = {"range": highlight, "note-id": note_id, "when": when}
 
             new_data = json.dumps(data)
-            worked, next_version, value = self.store.put(user_id, "annotation", version, citation, new_data)
+            worked, next_version, value = self.store.put(user_id, "annotation", version, key, new_data)
             if worked:
                 return {
                     "highlight-id": h_id,
@@ -159,16 +163,17 @@ class Annotations:
         :param note: The note to add.
         :return: (note_id, version, citation_annotation_data)
         """
-        version, raw_data = self.store.get(user_id, publication, citation)
+        key = self._get_key(publication, citation)
+        version, raw_data = self.store.get(user_id, "annotation", key)
         when = datetime.now().isoformat()
         while True:
             data = {} if raw_data is None else json.loads(raw_data)
             notes = data.setdefault("notes", {})
-            note_id = uuid.uuid4()
+            note_id = str(uuid.uuid4())
             notes[note_id] = {"text": note, "when": when}
 
             new_data = json.dumps(data)
-            worked, next_version, value = self.store.put(user_id, "annotation", version, citation, new_data)
+            worked, next_version, value = self.store.put(user_id, "annotation", version, key, new_data)
             if worked:
                 return {
                     "note-id": note_id,
@@ -188,10 +193,13 @@ class Annotations:
         :param data: The annotation data for this citation.
         :return: (version, merged_annotation_data)
         """
+        pprint(data)
         worked = False
-        version, raw_data = self.store.get(user_id, publication, citation)
+        key = self._get_key(publication, citation)
+        version, raw_data = self.store.get(user_id, "annotation", key)
         while True:
-            current_data = None if raw_data is None else json.loads(raw_data)
+            pprint((worked, version, raw_data))
+            current_data = json.loads(raw_data) if raw_data else None
             pprint(current_data)
             if worked:
                 return {
@@ -199,9 +207,9 @@ class Annotations:
                     "data": current_data
                 }
 
-            worked, next_version, raw_data = self.store.put(
-                user_id, "annotation", version, citation,
-                self._merge(current_data, data)
+            worked, version, raw_data = self.store.put(
+                user_id, "annotation", version, key,
+                json.dumps(self._merge(current_data, data)).encode("utf-8")
             )
 
 
