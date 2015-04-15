@@ -14,6 +14,7 @@ ${PYPY} /vagrant/get-pip.py
 # Install/build python modules
 ${PYPY} -m pip install uwsgi
 ${PYPY} -m pip install kazoo
+${PYPY} -m pip install elasticsearch
 
 sudo cp /vagrant/web.upstart.config /etc/init/sync.conf
 
