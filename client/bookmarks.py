@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 import requests
 import sqlite3
+import sys
 
 __author__ = 'Christopher Nelson'
 
@@ -92,6 +93,40 @@ def sync_bookmarks(url, pub):
              "dirty": False,
              "bookmarks": results["data"]}
         )
+
+def sync_all_bookmarks(url):
+    r_status = get_bookmark_status(url, local=False)
+    l_status = get_bookmark_status(url)
+    #pprint(r_status)
+    #pprint(l_status)
+    if r_status["error"]:
+        print("Failed to request bookmark status.")
+        sys.exit(1)
+    else:
+        r_status = r_status["value"]
+
+    r_index = {i["pub"]: i for i in r_status}
+    l_index = {i["pub"]: i for i in l_status}
+
+    pubs = sorted(set(r_index.keys()).union(set(l_index.keys())))
+    for item in pubs:
+        r_item = r_index.get(item)
+        l_item = l_index.get(item)
+        needs_update = \
+            item not in l_index or \
+            item not in r_index or \
+            l_item.get("dirty", False) or \
+            l_item.get("version", -1) < r_item.get("version")
+
+        print("%s %s local=%s remote=%s" % (
+            "*" if needs_update else " ",
+            item,
+            "not present" if l_item is None else l_item.get("version"),
+            "not present" if r_item is None else r_item.get("version")
+        ))
+        if needs_update:
+            sync_bookmarks(url, item)
+
 
 
 def get_bookmark_status(url, local=True):

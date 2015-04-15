@@ -70,38 +70,10 @@ def sync_item(args):
 
 def sync_all_items(args):
     if args.item_type == "bookmark":
-        r_status = bookmarks.get_bookmark_status(args.service, local=False)
-        l_status = bookmarks.get_bookmark_status(args.service)
-        pprint(r_status)
-        pprint(l_status)
-        if r_status["error"]:
-            print("Failed to request bookmark status.")
-            sys.exit(1)
-        else:
-            r_status = r_status["value"]
+        bookmarks.sync_all_bookmarks(args.service)
 
-        r_index = {i["pub"]: i for i in r_status}
-        l_index = {i["pub"]: i for i in l_status}
-
-        pubs = set(r_index.keys()).union(set(l_index.keys()))
-        for item in pubs:
-            r_item = r_index.get(item)
-            l_item = l_index.get(item)
-            needs_update = \
-                item not in l_index or \
-                item not in r_index or \
-                l_item.get("dirty", False) or \
-                l_item.get("version", -1) < r_item.get("version")
-
-            print("%s %s local=%s remote=%s" % (
-                "*" if needs_update else " ",
-                item,
-                l_index.get(item, "not present"),
-                r_index.get(item, "not present")
-            ))
-            if needs_update:
-                bookmarks.sync_bookmarks(args.service, item)
-
+    elif args.item_type == "annotation":
+        annotations.sync_all_annotations(args.service)
 
 parser = argparse.ArgumentParser(
     prog="client",

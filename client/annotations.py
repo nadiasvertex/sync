@@ -6,6 +6,7 @@ import requests
 import sqlite3
 from urlparse import urlparse, urlunparse
 import uuid
+import sys
 
 __author__ = 'Christopher Nelson'
 
@@ -64,7 +65,7 @@ def store_annotations(pub, citation, data):
             "REPLACE INTO annotation(pub, citation, version, dirty) VALUES(?, ?, ?, ?)",
             (pub, citation, data["version"], data["dirty"])
         )
-        cur.execute("SELECT id FROM annotation WHERE pub=? AND citation=?", (pub,citation))
+        cur.execute("SELECT id FROM annotation WHERE pub=? AND citation=?", (pub, citation))
         annotation_id = cur.fetchone()[0]
 
         for k, v in data["notes"].items():
@@ -129,12 +130,37 @@ def load_annotations(pub, citation):
     return data
 
 
+def load_annotations_status():
+    ensure_db()
+    con = sqlite3.connect(annotation_db)
+    con.row_factory = sqlite3.Row
+    try:
+        return [
+            {
+                "version": row["version"],
+                "dirty": row["dirty"],
+                "pub": row["pub"],
+                "citation": row["citation"]
+            } for row in con.execute("SELECT pub, citation, version, dirty FROM annotation")]
+    finally:
+        con.close()
+
+
 def get_annotations(pub, citation):
     a = load_annotations(pub, citation)
     if a:
         pprint(a)
     else:
         print("-empty-")
+
+
+def get_annotation_status(url, local=True):
+    if not local:
+        p_url = urlparse(url)
+        r_url = urlunparse((p_url[0], p_url[1], "/annotations/1/", None, None, None))
+        return requests.get(r_url).json()
+    else:
+        return load_annotations_status()
 
 
 def add_highlight(pub, citation, text_range, note):
@@ -175,13 +201,13 @@ def sync_annotations(url, pub, citation):
     a = load_annotations(pub, citation)
     del a["version"]
     del a["dirty"]
-    print("local data:")
-    pprint(a)
+    #print("local data:")
+    #pprint(a)
     p_url = urlparse(url)
     r_url = urlunparse((p_url[0], p_url[1], "/annotation/1/%s/%s" % (pub, citation), None, None, None))
     r = requests.put(r_url, json.dumps(a).encode("utf-8")).json()
-    print("merged data:")
-    pprint(r)
+    #print("merged data:")
+    #pprint(r)
     if r["error"]:
         print("Failed to synchronize '%s/%s' annotations:\n%s" % (pub, citation, r["error-message"]))
         return
@@ -196,3 +222,38 @@ def sync_annotations(url, pub, citation):
              "highlights": data["highlights"],
              "notes": data["notes"]}
         )
+
+def sync_all_annotations(url):
+    r_status = get_annotation_status(url, local=False)
+    l_status = get_annotation_status(url)
+    #pprint(r_status)
+    #pprint(l_status)
+
+    if r_status["error"]:
+        print("Failed to request bookmark status.")
+        sys.exit(1)
+    else:
+        r_status = r_status["value"]
+
+    r_index = {(i["pub"], i["citation"]): i for i in r_status}
+    l_index = {(i["pub"], i["citation"]): i for i in l_status}
+
+    items = sorted(set(r_index.keys()).union(set(l_index.keys())))
+    for item in items:
+        r_item = r_index.get(item)
+        l_item = l_index.get(item)
+        needs_update = \
+            item not in l_index or \
+            item not in r_index or \
+            l_item.get("dirty", False) or \
+            l_item.get("version", -1) < r_item.get("version")
+
+        print("%s %s local=%s remote=%s" % (
+            "*" if needs_update else " ",
+            str(item),
+            "not present" if l_item is None else l_item.get("version"),
+            "not present" if r_item is None else r_item.get("version")
+        ))
+        if needs_update:
+            sync_annotations(url, item[0], item[1])
+
