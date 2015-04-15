@@ -115,7 +115,7 @@ def set_bookmark(pub, slot, citation):
     pub_db = load_bookmarks(pub)
     if pub_db is None:
         pub_db = {"version": -1, "dirty": False, "bookmarks": {}}
-        
+
     pub_db["dirty"] = True
     slot_entry = pub_db["bookmarks"].setdefault(slot, {})
     slot_entry["when"] = datetime.now().isoformat()
