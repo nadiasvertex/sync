@@ -80,11 +80,24 @@ def annotation_handler(env, elements):
             annotation_data = json.loads(env['wsgi.input'].read())
             return annotations.update(uid, pub, citation, annotation_data)
 
+def annotation_collection_handler(env, elements):
+    st = store_zk.Store(zk_hosts)
+    annotations = annotation_mgr.Annotations(st)
+
+    print("processing annotation collection request: %s" % str(elements))
+    uid = elements[0]
+
+    method = env["REQUEST_METHOD"]
+    with st:
+        if method == "GET":
+            return annotations.get_status(uid)
+
 
 handlers = {
     "bookmark": bookmark_handler,
     "bookmarks": bookmark_collection_handler,
-    "annotation": annotation_handler
+    "annotation": annotation_handler,
+    "annotations": annotation_collection_handler
 }
 
 

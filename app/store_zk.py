@@ -40,6 +40,10 @@ class Store:
                 output.append((child, zstat.version))
         return output
 
+    def get_child_names(self, uid, ns, key):
+        path = self._get_path([uid, ns, key])
+        return self.zk.get_children(path)
+
     def get_children(self, uid, ns, key):
         """
         Get the children of the given key.

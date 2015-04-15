@@ -87,11 +87,17 @@ class Annotations:
     def _get_key(self, pub, citation):
         kind, position = citation.split("/")
         p_vec = position.split(":")
-        if kind == "doc" and len(p_vec) >= 3:
-            p_vec = p_vec[0:2]
-        elif kind == "bible" and len(p_vec) >= 4:
-            p_vec = p_vec[0:3]
-        key = "%s/%s/%s" % (pub, kind, "/".join(p_vec))
+        if kind == "doc":
+            c_vec = p_vec[0:1]
+            tail = p_vec[1]
+        elif kind == "bible":
+            c_vec = p_vec[0:2]
+            tail = p_vec[2]
+        else:
+            raise ValueError("Unknown citation kind '%s'" % kind)
+
+        key = "%s/%s/%s/%s" % (pub, kind, ":".join(c_vec), tail)
+        print("%s/%s -> %s" % (pub, citation, key))
         return key
 
     def get(self, user_id, publication, citation):
@@ -212,4 +218,16 @@ class Annotations:
                 json.dumps(self._merge(current_data, data)).encode("utf-8")
             )
 
+    def get_status(self, uid):
+        children = self.store.get_child_names(uid, "annotation", None)
+        output = []
+        for pub in children:
+            kinds = self.store.get_child_names(uid, "annotation", pub)
+            for kind in kinds:
+                heads = self.store.get_child_names(uid, "annotation", "%s/%s" % (pub, kind))
+                for head in heads:
+                    output += [{"pub": pub, "citation": "%s/%s:%s" % (kind, head, c[0]), "version": c[1]}
+                               for c in self.store.get_versioned_children(uid, "annotation", "%s/%s/%s" % (pub, kind, head))]
+
+        return output
 
