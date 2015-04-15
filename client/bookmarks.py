@@ -82,7 +82,7 @@ def sync_bookmarks(url, pub):
     r = requests.put(r_url, json.dumps(pub_db["bookmarks"]).encode("utf-8")).json()
     pprint(r)
     if r["error"]:
-        print("Failed to synchronize '%s' bookmarks:\n%s" % (pub, r["message"]))
+        print("Failed to synchronize '%s' bookmarks:\n%s" % (pub, r["error-message"]))
         return
     else:
         results = r["value"]

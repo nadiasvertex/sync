@@ -116,11 +116,11 @@ def load_annotations(pub, citation):
     for r in cur.execute("SELECT * FROM note WHERE annotation_id=?", (annotation_id,)):
         notes[r["uuid"]] = {"text": r["text"], "when": r["ts"]}
 
-    for r in cur.execute("SELECT h.uuid AS uuid, n.id AS note_id, h.range AS range, h.ts AS ts "
+    for r in cur.execute("SELECT h.uuid AS uuid, n.uuid AS note_uuid, h.range AS range, h.ts AS ts "
                          "FROM highlight AS h "
                          "LEFT OUTER JOIN note AS n ON h.note_id=n.id "
                          "WHERE h.annotation_id=?", (annotation_id,)):
-        highlights[r["uuid"]] = {"range": r["range"], "when": r["ts"], "note-id": r["note_id"]}
+        highlights[r["uuid"]] = {"range": r["range"], "when": r["ts"], "note-id": r["note_uuid"]}
 
     data["highlights"] = highlights
     data["notes"] = notes
@@ -173,12 +173,17 @@ def add_note(pub, citation, note):
 
 def sync_annotations(url, pub, citation):
     a = load_annotations(pub, citation)
+    del a["version"]
+    del a["dirty"]
+    print("local data:")
+    pprint(a)
     p_url = urlparse(url)
-    r_url = urlunparse((p_url[0], p_url[1], "/annotation/1/%s" % pub, None, None, None))
+    r_url = urlunparse((p_url[0], p_url[1], "/annotation/1/%s/%s" % (pub, citation), None, None, None))
     r = requests.put(r_url, json.dumps(a).encode("utf-8")).json()
+    print("merged data:")
     pprint(r)
     if r["error"]:
-        print("Failed to synchronize '%s/%s' annotations:\n%s" % (pub, citation, r["message"]))
+        print("Failed to synchronize '%s/%s' annotations:\n%s" % (pub, citation, r["error-message"]))
         return
     else:
         results = r["value"]
