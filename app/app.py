@@ -60,7 +60,7 @@ def annotation_handler(env, elements):
     with st:
         if method == "GET":
             return annotations.get(uid, pub, citation)
-        elif method == "PUT":
+        elif method == "POST":
             annotation_data = json.loads(env['wsgi.input'].read())
             if "highlight" in annotation_data:
                 return annotations.add_highlight(
@@ -75,6 +75,9 @@ def annotation_handler(env, elements):
                 )
             else:
                 raise ValueError("Require 'highlight' or 'note' (or both) for this request.")
+        elif method == "PUT":
+            annotation_data = json.loads(env['wsgi.input'].read())
+            return annotations.update(uid, pub, citation, annotation_data)
 
 
 handlers = {

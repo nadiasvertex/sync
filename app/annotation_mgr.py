@@ -1,5 +1,7 @@
 import json
+from pprint import pprint
 import uuid
+from datetime import datetime
 
 __author__ = 'Christopher Nelson'
 
@@ -7,6 +9,57 @@ __author__ = 'Christopher Nelson'
 class Annotations:
     def __init__(self, store):
         self.store = store
+
+    def _merge_dict(self, d1, d2, o):
+        """
+        Merges dictionaries d1 and d2. Expects each dictionary to have a set of keys whose values are also dictionaries.
+        Those dictionaries must have a key called "when", which orders the values based on simple equality.
+
+        :param d1: A dictionary.
+        :param d2: A different dictionary.
+        :param o: The output object.
+        :return: The set union of d1 and d2, with conflicts resolved by timestamp.
+        """
+        keys = set(d1.keys()).union(set(d2.keys()))
+
+        for item in keys:
+            d1_item = d1.get(item)
+            d2_item = d2.get(item)
+            if d1_item is None:
+                o[item] = d2_item
+            elif d2_item is None:
+                o[item] = d1_item
+            else:
+                d1_when = d1_item["when"]
+                d2_when = d2_item["when"]
+                o[item] = d1_item if d1_when > d2_when else d2_item
+
+        return o
+
+    def _merge(self, d1, d2):
+        """
+        Merges data from d1 and d2, returns the results.
+
+        :param d1: An annotation dictionary.
+        :param d2: A different annotation dictionary.
+        :return: The set union of d1 and d2, conflict resolved by timestamp.
+        """
+        if d1 is None:
+            return d2
+        if d2 is None:
+            return d1
+
+        d1_h = d1["highlights"]
+        d2_h = d2["highlights"]
+
+        d1_n = d1["notes"]
+        d2_n = d2["notes"]
+
+        return {
+            "highights": self._merge_dict(d1_h, d2_h, {}),
+            "notes": self._merge_dict(d1_n, d2_n, {})
+        }
+
 
     def _fetch_annotations(self, user_id, publication, key, o, children, data):
         """
@@ -72,6 +125,7 @@ class Annotations:
         :return: (highlight_id, version, citation_annotation_data)
         """
         version, raw_data = self.store.get(user_id, publication, citation)
+        when = datetime.now().isoformat()
         while True:
             data = {} if raw_data is None else json.loads(raw_data)
             highlights = data.setdefault("highlights", {})
@@ -79,12 +133,12 @@ class Annotations:
             if note is not None:
                 notes = data.setdefault("notes", {})
                 note_id = uuid.uuid4()
-                notes[note_id] = note
+                notes[note_id] = {"text": note, "when": when}
             else:
                 note_id = None
 
             h_id = uuid.uuid4()
-            highlights[h_id] = {"range": highlight, "note-id": note_id}
+            highlights[h_id] = {"range": highlight, "note-id": note_id, "when": when}
 
             new_data = json.dumps(data)
             worked, next_version, value = self.store.put(user_id, "annotation", version, citation, new_data)
@@ -106,11 +160,12 @@ class Annotations:
         :return: (note_id, version, citation_annotation_data)
         """
         version, raw_data = self.store.get(user_id, publication, citation)
+        when = datetime.now().isoformat()
         while True:
             data = {} if raw_data is None else json.loads(raw_data)
             notes = data.setdefault("notes", {})
             note_id = uuid.uuid4()
-            notes[note_id] = note
+            notes[note_id] = {"text": note, "when": when}
 
             new_data = json.dumps(data)
             worked, next_version, value = self.store.put(user_id, "annotation", version, citation, new_data)
@@ -120,3 +175,33 @@ class Annotations:
                     "version": next_version,
                     "annotations": value
                 }
+
+    def update(self, user_id, publication, citation, data):
+        """
+        Merges the annotation data stored at `citation` with the data given to us in
+        `data`. A set union is performed, and any intersections are resolved by using
+        the latest timestamp as the victor.
+
+        :param user_id: The user id to select.
+        :param publication: The publication to select.
+        :param citation: The citation to select.
+        :param data: The annotation data for this citation.
+        :return: (version, merged_annotation_data)
+        """
+        worked = False
+        version, raw_data = self.store.get(user_id, publication, citation)
+        while True:
+            current_data = None if raw_data is None else json.loads(raw_data)
+            pprint(current_data)
+            if worked:
+                return {
+                    "version": version,
+                    "data": current_data
+                }
+
+            worked, next_version, raw_data = self.store.put(
+                user_id, "annotation", version, citation,
+                self._merge(current_data, data)
+            )
+
+
