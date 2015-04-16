@@ -2,6 +2,8 @@ import json
 from pprint import pprint
 import traceback
 
+from elasticsearch import Elasticsearch
+
 import uwsgi
 import store_zk
 import bookmark_mgr
@@ -50,7 +52,8 @@ def bookmark_collection_handler(env, elements):
 
 def annotation_handler(env, elements):
     st = store_zk.Store(zk_hosts)
-    annotations = annotation_mgr.Annotations(st)
+    es = Elasticsearch(zk_hosts, sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60)
+    annotations = annotation_mgr.Annotations(st, es)
 
     print("processing annotation request: %s" % str(elements))
     uid = elements[0]
@@ -82,7 +85,8 @@ def annotation_handler(env, elements):
 
 def annotation_collection_handler(env, elements):
     st = store_zk.Store(zk_hosts)
-    annotations = annotation_mgr.Annotations(st)
+    es = Elasticsearch(zk_hosts, sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60)
+    annotations = annotation_mgr.Annotations(st, es)
 
     print("processing annotation collection request: %s" % str(elements))
     uid = elements[0]

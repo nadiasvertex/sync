@@ -7,8 +7,9 @@ __author__ = 'Christopher Nelson'
 
 
 class Annotations:
-    def __init__(self, store):
+    def __init__(self, store, es):
         self.store = store
+        self.es = es
 
     def _merge_dict(self, d1, d2, o):
         """
@@ -201,6 +202,7 @@ class Annotations:
         """
         pprint(data)
         worked = False
+        merged_data = {}
         key = self._get_key(publication, citation)
         version, raw_data = self.store.get(user_id, "annotation", key)
         while True:
@@ -208,15 +210,41 @@ class Annotations:
             current_data = json.loads(raw_data) if raw_data else None
             pprint(current_data)
             if worked:
+                # Update elasticsearch before returning success.
+                # We don't try super hard here to be perfectly consistent
+                # because this is just a prototype. We could easily do that
+                # by locking this znode and then proceeding.
+                for k, v in merged_data["notes"].items():
+                    if self.es.exists("notes", k):
+                        self.es.update(
+                            "notes", "note", k, {
+                                "doc": {
+                                    "text": v["text"]
+                                }
+                            }
+                        )
+                    else:
+                        self.es.create(
+                            "notes", "note", {
+                                "citation": citation,
+                                "publication": publication,
+                                "text": v["text"]
+                            },
+                            k
+                        )
+
+
                 return {
                     "version": version,
                     "data": current_data
                 }
 
+            merged_data = self._merge(current_data, data)
             worked, version, raw_data = self.store.put(
                 user_id, "annotation", version, key,
-                json.dumps(self._merge(current_data, data)).encode("utf-8")
+                json.dumps(merged_data).encode("utf-8")
             )
+
 
     def get_status(self, uid):
         children = self.store.get_child_names(uid, "annotation", None)
@@ -227,7 +255,8 @@ class Annotations:
                 heads = self.store.get_child_names(uid, "annotation", "%s/%s" % (pub, kind))
                 for head in heads:
                     output += [{"pub": pub, "citation": "%s/%s:%s" % (kind, head, c[0]), "version": c[1]}
-                               for c in self.store.get_versioned_children(uid, "annotation", "%s/%s/%s" % (pub, kind, head))]
+                               for c in
+                               self.store.get_versioned_children(uid, "annotation", "%s/%s/%s" % (pub, kind, head))]
 
         return output
 
