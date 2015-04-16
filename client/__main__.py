@@ -1,5 +1,4 @@
 import argparse
-import sys
 from pprint import pprint
 
 from client import bookmarks
@@ -75,6 +74,11 @@ def sync_all_items(args):
     elif args.item_type == "annotation":
         annotations.sync_all_annotations(args.service)
 
+
+def search_item(args):
+    pprint(annotations.search_annotation(args.service, args.term))
+
+
 parser = argparse.ArgumentParser(
     prog="client",
     epilog="A citation is always preceded with either bible/ or doc/ to "
@@ -112,6 +116,13 @@ add_options(sync)
 sync_all = subparsers.add_parser("sync-all", description="Synchronize all items of the given type.")
 sync_all.set_defaults(func=sync_all_items)
 add_options(sync_all)
+
+search = subparsers.add_parser("search", description="Search all notes.")
+search.set_defaults(func=search_item)
+search.add_argument(
+    "term", metavar="SEARCH TERM",
+    help="The search term."
+)
 
 args = parser.parse_args()
 args.func(args)
