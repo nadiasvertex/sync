@@ -230,7 +230,7 @@ def sync_all_annotations(url):
     #pprint(l_status)
 
     if r_status["error"]:
-        print("Failed to request bookmark status.")
+        print("Failed to request annotation status:\n" + r_status["error-message"])
         sys.exit(1)
     else:
         r_status = r_status["value"]

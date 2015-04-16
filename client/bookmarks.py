@@ -94,10 +94,11 @@ def sync_bookmarks(url, pub):
              "bookmarks": results["data"]}
         )
 
+
 def sync_all_bookmarks(url):
     r_status = get_bookmark_status(url, local=False)
     l_status = get_bookmark_status(url)
-    #pprint(r_status)
+    # pprint(r_status)
     #pprint(l_status)
     if r_status["error"]:
         print("Failed to request bookmark status.")
@@ -126,7 +127,6 @@ def sync_all_bookmarks(url):
         ))
         if needs_update:
             sync_bookmarks(url, item)
-
 
 
 def get_bookmark_status(url, local=True):
