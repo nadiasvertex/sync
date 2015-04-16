@@ -3,6 +3,9 @@ from pprint import pprint
 import uuid
 from datetime import datetime
 
+from kazoo.exceptions import NoNodeError
+
+
 __author__ = 'Christopher Nelson'
 
 
@@ -228,11 +231,11 @@ class Annotations:
                             "notes", "note", {
                                 "citation": citation,
                                 "publication": publication,
+                                "uid": user_id,
                                 "text": v["text"]
                             },
                             k
                         )
-
 
                 return {
                     "version": version,
@@ -247,7 +250,11 @@ class Annotations:
 
 
     def get_status(self, uid):
-        children = self.store.get_child_names(uid, "annotation", None)
+        try:
+            children = self.store.get_child_names(uid, "annotation", None)
+        except NoNodeError:
+            return []
+
         output = []
         for pub in children:
             kinds = self.store.get_child_names(uid, "annotation", pub)
@@ -259,4 +266,33 @@ class Annotations:
                                self.store.get_versioned_children(uid, "annotation", "%s/%s/%s" % (pub, kind, head))]
 
         return output
+
+    def search(self, uid, term):
+        q = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {"match_phrase": {"text": term}},
+                        {"term": {"uid": uid}}
+                    ]
+                }
+            }
+        }
+
+        pprint(q)
+        r = self.es.search("notes", "note", q)
+        pprint(r)
+
+        return [
+            {
+                "publication": h["_source"]["publication"],
+                "citation": h["_source"]["citation"],
+                "note-id": h["_id"],
+                "text": h["_source"]["text"]
+            }
+            for h in r["hits"]["hits"]
+        ]
+
+
+
 

@@ -96,12 +96,28 @@ def annotation_collection_handler(env, elements):
         if method == "GET":
             return annotations.get_status(uid)
 
+def search_handler(env, elements):
+    st = store_zk.Store(zk_hosts)
+    es = Elasticsearch(zk_hosts, sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60)
+    annotations = annotation_mgr.Annotations(st, es)
+
+    uid = elements[0]
+    term = env["QUERY_STRING"].split("=")[1]
+
+    print("processing search request: %s (term=%s)" % (str(elements), term))
+
+    method = env["REQUEST_METHOD"]
+    with st:
+        if method == "GET":
+            return annotations.search(uid, term)
+
 
 handlers = {
     "bookmark": bookmark_handler,
     "bookmarks": bookmark_collection_handler,
     "annotation": annotation_handler,
-    "annotations": annotation_collection_handler
+    "annotations": annotation_collection_handler,
+    "search": search_handler
 }
 
 
