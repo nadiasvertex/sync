@@ -193,7 +193,7 @@ def get_annotation_status(url, local=True):
 def search_annotation(url, term, local=True):
     if not local:
         p_url = urlparse(url)
-        r_url = urlunparse((p_url[0], p_url[1], "/search/annotations/1/", None, "term=%s" % term, None))
+        r_url = urlunparse((p_url[0], p_url[1], "/search/1/", None, "term=%s" % term, None))
         return requests.get(r_url).json()
     else:
         return load_fts(term)

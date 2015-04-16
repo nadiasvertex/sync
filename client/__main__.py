@@ -76,7 +76,7 @@ def sync_all_items(args):
 
 
 def search_item(args):
-    pprint(annotations.search_annotation(args.service, args.term))
+    pprint(annotations.search_annotation(args.service, args.term, local=args.offline))
 
 
 parser = argparse.ArgumentParser(
@@ -95,6 +95,9 @@ parser.add_argument(
     '--service', default='http://localhost:8080/',
     metavar="URL",
     help='The service address to connect to. Default is %(default)s')
+parser.add_argument(
+    '--offline', default=False, action="store_true",
+    help="Don't try to connect to service. Default is %(default)s")
 
 subparsers = parser.add_subparsers()
 add = subparsers.add_parser("set", description="Set an item.")
