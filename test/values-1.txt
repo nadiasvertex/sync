@@ -1,0 +1,8 @@
+cl:E,doc/102031293:1,,"The first time this appears in the text."
+cl:E,doc/102031293:1,10-14,
+cl:E,doc/102031293:2,5-18,
+cl:E,doc/102031293:3,150-178,"The depth of God's love is evident here."
+cl:E,doc/102031293:4,30-48,
+cl:E,doc/102031293:4,187-201,
+cl:E,doc/284918384:5,,"This is a useful point for other things."
+cl:E,doc/284918384:6,34-56,"The light grows brighter."

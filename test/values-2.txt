@@ -1,0 +1,6 @@
+cl:E,doc/102031293:1,,"The second time this appears in the text."
+cl:E,doc/123023821:3,23-97,"An important point for field service."
+lv:E,doc/123023821:4,29-33,
+lv:E,doc/123023821:4,190-213,
+lv:E,doc/123023821:5,,"Study ended here on 2015/05/10"
+lv:E,doc/123023821:6,34-56,"A heartfelt plea."
