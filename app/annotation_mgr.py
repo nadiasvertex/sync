@@ -1,6 +1,7 @@
 import json
-from pprint import pprint
+import logging
 import uuid
+from pprint import pformat
 from datetime import datetime
 
 from kazoo.exceptions import NoNodeError
@@ -101,7 +102,6 @@ class Annotations:
             raise ValueError("Unknown citation kind '%s'" % kind)
 
         key = "%s/%s/%s/%s" % (pub, kind, ":".join(c_vec), tail)
-        print("%s/%s -> %s" % (pub, citation, key))
         return key
 
     def get(self, user_id, publication, citation):
@@ -203,15 +203,13 @@ class Annotations:
         :param data: The annotation data for this citation.
         :return: (version, merged_annotation_data)
         """
-        pprint(data)
+        logging.debug(pformat(data))
         worked = False
         merged_data = {}
         key = self._get_key(publication, citation)
         version, raw_data = self.store.get(user_id, "annotation", key)
         while True:
-            pprint((worked, version, raw_data))
             current_data = json.loads(raw_data) if raw_data else None
-            pprint(current_data)
             if worked:
                 # Update elasticsearch before returning success.
                 # We don't try super hard here to be perfectly consistent
@@ -279,9 +277,9 @@ class Annotations:
             }
         }
 
-        pprint(q)
+        logging.debug(pformat(q))
         r = self.es.search("notes", "note", q)
-        pprint(r)
+        logging.debug(pformat(r))
 
         return [
             {

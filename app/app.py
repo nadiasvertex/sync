@@ -1,5 +1,5 @@
 import json
-from pprint import pprint
+import logging
 import traceback
 
 from elasticsearch import Elasticsearch
@@ -24,7 +24,7 @@ def bookmark_handler(env, elements):
     st = store_zk.Store(zk_hosts)
     bookmarks = bookmark_mgr.Bookmarks(st)
 
-    print("processing bookmark request: %s" % str(elements))
+    logging.debug("processing bookmark request: %s", str(elements))
     uid = elements[0]
     pub = elements[1]
 
@@ -41,7 +41,7 @@ def bookmark_collection_handler(env, elements):
     st = store_zk.Store(zk_hosts)
     bookmarks = bookmark_mgr.Bookmarks(st)
 
-    print("processing bookmark collection request: %s" % str(elements))
+    logging.debug("processing bookmark collection request: %s", str(elements))
     uid = elements[0]
 
     method = env["REQUEST_METHOD"]
@@ -55,7 +55,7 @@ def annotation_handler(env, elements):
     es = Elasticsearch(zk_hosts, sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60)
     annotations = annotation_mgr.Annotations(st, es)
 
-    print("processing annotation request: %s" % str(elements))
+    logging.debug("processing annotation request: %s", str(elements))
     uid = elements[0]
     pub = elements[1]
     citation = "%s/%s" % (elements[2], elements[3])
@@ -88,7 +88,7 @@ def annotation_collection_handler(env, elements):
     es = Elasticsearch(zk_hosts, sniff_on_start=True, sniff_on_connection_fail=True, sniffer_timeout=60)
     annotations = annotation_mgr.Annotations(st, es)
 
-    print("processing annotation collection request: %s" % str(elements))
+    logging.debug("processing annotation collection request: %s", str(elements))
     uid = elements[0]
 
     method = env["REQUEST_METHOD"]
@@ -104,7 +104,7 @@ def search_handler(env, elements):
     uid = elements[0]
     term = env["QUERY_STRING"].split("=")[1]
 
-    print("processing search request: %s (term=%s)" % (str(elements), term))
+    logging.debug("processing search request: %s (term=%s)", str(elements), term)
 
     method = env["REQUEST_METHOD"]
     with st:
@@ -122,10 +122,10 @@ handlers = {
 
 
 def application(env, start_response):
-    print(env)
+    logging.debug(str(env))
 
     parts = env["REQUEST_URI"].split("/")
-    print(parts)
+    logging.debug(parts)
     handler = handlers.get(parts[1])
     if handler is None:
         start_response('400 Bad Request', [('Content-Type', 'text/json')])

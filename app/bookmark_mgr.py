@@ -2,6 +2,7 @@
 Manages bookmarks. Provides synchronization between versions.
 """
 import json
+import logging
 
 __author__ = 'Christopher Nelson'
 
@@ -33,7 +34,7 @@ class Bookmarks:
         :param b2: Bookmark payload two to merge.
         :return: The merged bookmarks.
         """
-        print("b1=%s, b2=%s" % (b1, b2))
+        logging.debug("b1=%s, b2=%s", b1, b2)
         if b1 == b2:
             return b1
 
@@ -76,17 +77,17 @@ class Bookmarks:
         version, value = self.store.get(user_id, "bookmark", publication)
 
         while True:
-            print("existing value: '%s'" % str(value))
+            logging.debug("existing value: '%s'", str(value))
 
             stored_bookmarks = json.loads(value) if value else None
             if worked:
                 return {"version": version, "data": stored_bookmarks}
 
-            print("existing decoded value: '%s'" % str(stored_bookmarks))
+            logging.debug("existing decoded value: '%s'", str(stored_bookmarks))
 
             merged = json.dumps(self.merge(bookmarks, stored_bookmarks))
 
-            print("merged value: '%s'" % merged)
+            logging.debug("merged value: '%s'", merged)
 
             worked, version, value = self.store.put(
                 user_id,
