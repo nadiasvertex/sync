@@ -2,6 +2,8 @@ import csv
 import os
 import sys
 
+import argparse
+
 
 def update_data(citation, note, pub, text_range):
     cmd = [
@@ -30,16 +32,24 @@ def load_data(filename):
 
 
 def sync_data():
+    global args
     cmd = [
         sys.executable,
         "-m", "client",
-        "--service=http://localhost:9090",
+        "--service=" + args.service,
         "sync-all", "annotation"
     ]
     cmd = " ".join(cmd)
     print(cmd)
     os.system(cmd)
 
+
+parser = argparse.ArgumentParser(prog="test")
+parser.add_argument(
+    '--service', default='http://localhost:8080/',
+    metavar="URL",
+    help='The service address to connect to. Default is %(default)s')
+args = parser.parse_args()
 
 load_data("values-1.txt")
 sync_data()
