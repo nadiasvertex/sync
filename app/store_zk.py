@@ -4,6 +4,7 @@ Provides a key-value store interface for zookeeper.
 
 from kazoo.client import KazooClient
 from kazoo.exceptions import NoNodeError, BadVersionError
+import logging
 
 __author__ = 'Christopher Nelson'
 
@@ -15,7 +16,7 @@ class Store:
 
     def __init__(self, host_list):
         hosts = ",".join(host_list)
-        print("zk, connecting to: '%s'" % hosts)
+        logging.debug("zk, connecting to: '%s'", hosts)
         self.zk = KazooClient(hosts)
 
     def __enter__(self):
@@ -68,13 +69,13 @@ class Store:
         :return: A tuple of (version, value) stored.
         """
         path = self._get_path([uid, ns, key])
-        print("zk, fetching: '%s'" % path)
+        logging.debug("zk, fetching: '%s'", path)
         try:
             r = self.zk.get(path)
-            print("zk, value at: '%s'='%s'" % (path, r))
+            logging.debug("zk, value at: '%s'='%s'", path, r)
             return r[1].version, r[0]
         except NoNodeError:
-            print("zk, no value at: '%s'" % path)
+            logging.debug("zk, no value at: '%s'", path)
             return None, None
 
 
@@ -98,11 +99,11 @@ class Store:
             return True, 1, value
 
         try:
-            print("zk, set '%s'='%s'" % (path, value))
+            logging.debug("zk, set '%s'='%s'", path, value)
             self.zk.set(path, value, version=expected_version)
             return True, expected_version + 1, value
         except BadVersionError:
-            print("zk, set failed '%s'='%s'" % (path, value))
+            logging.debug("zk, set failed '%s'='%s'", path, value)
             r = self.zk.get(path)
             return False, r[1].version, r[0]
 
