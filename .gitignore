@@ -7,3 +7,6 @@ couchbase-server-community_3.0.1-ubuntu12.04_amd64.deb
 get-pip.py
 pypy-2.5.1-linux64.tar.bz2
 zookeeper-3.4.6.tar.gz
+elasticsearch-1.5.1.deb
+annotations.db
+bookmarks.db
