@@ -4,9 +4,20 @@ The sync app is a prototype distributed application for performing synchronizati
 
 Run the setup.sh script. This script requires wget. The script will do everything needed to bootstrap the cluster.
 
+## Windows notes
+
+The setup.sh script has also been tested to run under mingw on Windows 8. Note that you must run
+
+```
+git config core.autocrlf false
+```
+
+for this repo on Windows when checking it out. You must also run your msys shell as an administrator so that vagrant can create the
+necessary local network adapters if they don't already exist.
+
 ## Optional
 
-If you want to run the application server locally (for development) you must also install pypy, uwsgi, and 
+If you want to run the application server locally (for development) you must also install pypy, uwsgi, and
 kazoo on your local machine. (Pypy is automatically downloaded by the setup script.) Once you have run
 the setup script you can:
 
@@ -35,7 +46,7 @@ This will use the database nodes, but not the web server nodes or load balancer.
 
 ## Testing the application in distributed mode
 
-Run: 
+Run:
 
 ```
 ./update-web.sh
@@ -47,4 +58,3 @@ in default mode will hit the full cluster:
 ```
 pypy -m client sync-all bookmark
 ```
-
