@@ -58,3 +58,22 @@ in default mode will hit the full cluster:
 ```
 pypy -m client sync-all bookmark
 ```
+
+# Test framework
+
+There is a simple test framework which exercises the local and remote annotation code. You
+can run this by using python:
+
+```
+python -m test
+```
+
+## Windows notes
+
+If you don't have Python 2.7 installed, you'll need that. Note that the latest
+version of python 2.7 (2.7.9) has a version of sqlite3 that doesn't support
+full-text search. In order to fix that, you must download the 32-bit Python 2.7
+distro, or the 32-bit PyPy 2.7 equivalent (pypy-2.5.x). http://pypy.org/download.html#default-with-a-jit-compiler
+
+Then you have to download the latest sqlite3 .dll for Windows from https://www.sqlite.org/download.html
+and replace the sqlite3.dll in the folder with the one you downloaded. 
