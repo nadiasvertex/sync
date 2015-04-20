@@ -1,8 +1,8 @@
 #!/bin/bash
-wget -c http://mirror.cc.columbia.edu/pub/software/apache/zookeeper/stable/zookeeper-3.4.6.tar.gz
-wget -c https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.5.1.deb
-wget -c https://bitbucket.org/pypy/pypy/downloads/pypy-2.5.1-linux64.tar.bz2
-wget -c https://bootstrap.pypa.io/get-pip.py
+wget -c --no-check-certificate http://mirror.cc.columbia.edu/pub/software/apache/zookeeper/stable/zookeeper-3.4.6.tar.gz
+wget -c --no-check-certificate https://bitbucket.org/pypy/pypy/downloads/pypy-2.5.1-linux64.tar.bz2 --output-document=pypy-2.5.1-linux64.tar.bz2
+wget -c --no-check-certificate https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-1.5.1.deb
+wget -c --no-check-certificate https://bootstrap.pypa.io/get-pip.py
 
 # Create the cluster
 vagrant up
